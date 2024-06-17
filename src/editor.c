@@ -6,42 +6,52 @@ static void ed_callbackAbrirArquivo(GtkWidget *widget, gpointer data);
 static void ed_callbackSalvarArquivo(GtkWidget *widget, gpointer data);
 
 void ed_abrirJanelaPrincipal(void) {
-	ed.window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	// cria e prepara a janela
+	ed.window = gtk_window_new(GTK_WINDOW_TOPLEVEL); // "toplevel" = janela normal
 	gtk_window_set_title(GTK_WINDOW(ed.window), "Editor de Texto");
 	gtk_window_set_default_size(GTK_WINDOW(ed.window), 800, 600);
 	g_signal_connect(ed.window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
+	// criar uma caixa (box) para colocar a interface dentro
 	GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
 	gtk_container_add(GTK_CONTAINER(ed.window), vbox);
 
+	// criar a barra de menu
 	GtkWidget *menu_bar = gtk_menu_bar_new();
+	gtk_box_pack_start(GTK_BOX(vbox), menu_bar, FALSE, FALSE, 0);
 
-	GtkWidget *file_menu = gtk_menu_new();
-	GtkWidget *file_item = gtk_menu_item_new_with_label("Arquivo");
-	gtk_menu_item_set_submenu(GTK_MENU_ITEM(file_item), file_menu);
+	// criar o item de opções
+	GtkWidget *options_item = gtk_menu_item_new_with_label("Opções");
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), options_item);
 
-	GtkWidget *open_item = gtk_menu_item_new_with_label("Abrir");
+	// criar o submenu de opções nesse item
+	GtkWidget *options_menu = gtk_menu_new();
+	gtk_menu_item_set_submenu(GTK_MENU_ITEM(options_item), options_menu);
+
+	GtkWidget *open_item = gtk_menu_item_new_with_label("Abrir...");
 	g_signal_connect(open_item, "activate", G_CALLBACK(ed_callbackAbrirArquivo), NULL);
-	gtk_menu_shell_append(GTK_MENU_SHELL(file_menu), open_item);
+	gtk_menu_shell_append(GTK_MENU_SHELL(options_menu), open_item);
 
-	GtkWidget *save_item = gtk_menu_item_new_with_label("Salvar");
+	GtkWidget *save_item = gtk_menu_item_new_with_label("Salvar como...");
 	g_signal_connect(save_item, "activate", G_CALLBACK(ed_callbackSalvarArquivo), NULL);
-	gtk_menu_shell_append(GTK_MENU_SHELL(file_menu), save_item);
+	gtk_menu_shell_append(GTK_MENU_SHELL(options_menu), save_item);
 
 	GtkWidget *exit_item = gtk_menu_item_new_with_label("Sair");
 	g_signal_connect(exit_item, "activate", G_CALLBACK(gtk_main_quit), NULL);
-	gtk_menu_shell_append(GTK_MENU_SHELL(file_menu), exit_item);
+	gtk_menu_shell_append(GTK_MENU_SHELL(options_menu), exit_item);
 
-	gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), file_item);
-
-	gtk_box_pack_start(GTK_BOX(vbox), menu_bar, FALSE, FALSE, 0);
-
+	// criar caixa de texto e adicionar ela à box
+	// a scrolled window é usada para adicionar uma barra de rolagem à caixa de
+	// texto
 	ed.text_view = gtk_text_view_new();
-	ed.text_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(ed.text_view));
 	GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
 	gtk_container_add(GTK_CONTAINER(scrolled_window), ed.text_view);
 	gtk_box_pack_start(GTK_BOX(vbox), scrolled_window, TRUE, TRUE, 0);
 
+	// armazenar também uma referência ao buffer de texto
+	ed.text_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(ed.text_view));
+
+	// mostrar a janela
 	gtk_widget_show_all(ed.window);
 }
 
@@ -67,7 +77,6 @@ static void ed_callbackAbrirArquivo(GtkWidget *widget, gpointer data) {
 			const char *msg = "Falha ao abrir o arquivo!";
 			gtk_text_buffer_set_text(ed.text_buffer, msg, strlen(msg));
 		}
-
 
 		free(nomeArquivo);
 	}
